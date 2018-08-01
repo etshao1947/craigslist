@@ -1,7 +1,6 @@
 import urllib.request
 import urllib.error
 from bs4 import BeautifulSoup
-import re
 import pandas as pd
 
 pd.set_option('display.width',300)
@@ -95,8 +94,8 @@ for item in siteList:
             pass
 
 
-print(df_final)
-df_final.to_csv(r'C:\Users\bshao\Downloads\craig_jp_sword.txt', header = None, index = None)
+#print(df_final)
+#df_final.to_csv(r'C:\Users\bshao\Downloads\craig_jp_sword.txt', header = None, index = None)
 
 
 
