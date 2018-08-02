@@ -1,14 +1,11 @@
 import urllib.request
 import urllib.error
 from bs4 import BeautifulSoup
-import re
-import pandas as pd
 from joblib import Parallel, delayed
+import pandas as pd
 
-pd.set_option('display.width',300)
 
-
-def get_all_site_add():
+def get_site_add(search_var, key_words):
     link = 'https://geo.craigslist.org/iso/us'
 
     try:
@@ -30,20 +27,14 @@ def get_all_site_add():
 
     siteList = []
     for item in linkList_item:
-        siteList.append(str(item['href']))
+        link = (str(item['href']) + search_var + key_words)
+        siteList.append(link)
 
     return siteList
 
 
+def gen_data(link):
 
-def gen_link(self, key_words):
-    search_var = '/search/sss?query='
-    link = str(self+search_var+key_words)
-    return link
-
-
-
-def get_listing_item(link):
     try:
         headers = {'User_Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'}
         response = urllib.request.Request(link, headers=headers)
@@ -58,88 +49,39 @@ def get_listing_item(link):
 
     soup = BeautifulSoup(html,'html.parser')
     itemList = soup.find('ul', {'class': 'rows'})
-    return itemList
 
+    f = open('dataset.json', 'a')
 
-
-
-def gen_data(item):
-
-    global pf
-
-    try:
-        name = item.find('a', {'class': 'result-title hdrlnk'}).get_text()
-        price = item.find('span', {'class': 'result-price'}).get_text()
-        date = item.find('time')['datetime']
-        link = item.find('a', {'class': 'result-title hdrlnk'})['href']
-        id = (str(link).split('/')[-1]).split('.')[0]
-
-        data = {'id': [id], 'date': [date], 'price': [price], 'name': [name], 'link': [link]}
-        pf  = pd.dataframe.from_dict(data)
-        print(pf)
-
-    except:
-        pass
-
-    return pf
-
-
-
-
-def pipeline(site, key_words):
-
-    link = gen_link(site, key_words)
-    itemList = get_listing_item(link)
     for item in itemList:
-        dataset = gen_data(item)
-        final_pf = final_pf.append(dataset)
+        try:
+            name = item.find('a', {'class': 'result-title hdrlnk'}).get_text()
+            price = item.find('span', {'class': 'result-price'}).get_text()
+            date = item.find('time')['datetime']
+            link = item.find('a', {'class': 'result-title hdrlnk'})['href']
+            id = (str(link).split('/')[-1]).split('.')[0]
+            data = {'id': id, 'date': date, 'price': price, 'title': name, 'link': link}
 
-    return final_pf
+            #data = str(id +'||'+ date  +'||'+ price +'||'+ name  +'||'+ link)
+
+            print(data)
+            f.write('\n' + data)
+
+
+        except:
+            pass
+    f.close()
 
 
 
 
 
 
-
-
-siteList = ['https://washingtondc.craigslist.org', 'https://chicago.craigslist.org']
 key_words = 'japanese+sword'
-#siteList = get_all_site_add()
-pf = None
-final_pf = pd.DataFrame()
+search_var = '/search/sss?query='
+siteList = get_site_add(search_var, key_words)
+dataset = None
 
-x= Parallel(n_jobs=4, backend="threading", verbose=10)(delayed(pipeline)(site, key_words) for site in siteList)
-
-print(x)
+Parallel(n_jobs=2, backend='threading', verbose=10)(delayed(gen_data)(link) for link in siteList[0:10])
 
 
-
-#df = pd.DataFrame.from_dict(data)
-#df_final = df_final.append(df)
-#print(df_final)
-#df_final.to_csv(r'C:\Users\bshao\Downloads\craig_jp_sword.txt', header = None, index = None)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+print("Done.............................................")
