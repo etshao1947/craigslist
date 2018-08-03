@@ -50,7 +50,7 @@ def gen_data(link):
     soup = BeautifulSoup(html,'html.parser')
     itemList = soup.find('ul', {'class': 'rows'})
 
-    f = open('dataset.json', 'a')
+    f = open('dataset.csv', 'a')
 
     for item in itemList:
         try:
@@ -59,11 +59,12 @@ def gen_data(link):
             date = item.find('time')['datetime']
             link = item.find('a', {'class': 'result-title hdrlnk'})['href']
             id = (str(link).split('/')[-1]).split('.')[0]
-            data = {'id': id, 'date': date, 'price': price, 'title': name, 'link': link}
 
-            #data = str(id +'||'+ date  +'||'+ price +'||'+ name  +'||'+ link)
+            #data = {'id': id, 'date': date, 'price': price, 'title': name, 'link': link}
 
+            data = str(id +'|'+ date  +'|'+ price +'|'+ name  +'|'+ link)
             print(data)
+
             f.write('\n' + data)
 
 
@@ -81,7 +82,7 @@ search_var = '/search/sss?query='
 siteList = get_site_add(search_var, key_words)
 dataset = None
 
-Parallel(n_jobs=2, backend='threading', verbose=10)(delayed(gen_data)(link) for link in siteList[0:10])
+Parallel(n_jobs=-1, backend='threading', verbose=10)(delayed(gen_data)(link) for link in siteList)
 
 
 print("Done.............................................")
