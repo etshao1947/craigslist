@@ -3,6 +3,9 @@ import urllib.error
 from bs4 import BeautifulSoup
 from joblib import Parallel, delayed
 import pandas as pd
+pd.set_option('display.width', 10000)
+pd.set_option("display.max_columns", 20)
+pd.set_option("display.max_rows", 300)
 
 
 def get_site_add(search_var, key_words):
@@ -73,16 +76,45 @@ def gen_data(link):
     f.close()
 
 
+def get_key_words():
+    search = str(input()).split(' ')
+    key_words = '+'.join(search)
+    return key_words
 
 
-
-
-key_words = 'japanese+sword'
+key_words = get_key_words()
 search_var = '/search/sss?query='
 siteList = get_site_add(search_var, key_words)
 dataset = None
 
+
+
 Parallel(n_jobs=-1, backend='threading', verbose=10)(delayed(gen_data)(link) for link in siteList)
 
 
-print("Done.............................................")
+
+
+
+df = pd.read_csv('dataset.csv', sep = '|', names = ['id', 'date', 'price', 'title', 'link'], encoding='cp1252')
+df.date = pd.to_datetime(df.date)
+df = df.sort_values(by=['date', 'id'], ascending=False)
+df= df.drop_duplicates(subset=['id'])
+df = df.drop_duplicates(subset=['title'])
+
+f = open('result.html', 'a')
+
+for index, row in df.iterrows():
+    html = """
+    <li>
+        {}	|	{}	|	{}	|
+        <a href="{}">{}</a>
+    </li>
+    """.format(row['date'], row['id'], row['price'], row['link'], row['title'])
+
+    f.write('\n' + html)
+
+    #print(html)
+
+f.close()
+
+print('========================= done ========================')
